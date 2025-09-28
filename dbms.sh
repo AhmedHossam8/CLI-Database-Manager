@@ -26,7 +26,7 @@ while true; do
             fi
             read -p "Press Enter to continue."
            ;;
-	 2)
+        2)
             echo "Available Databases:"
             if [ "$(ls -A $DB_DIR)" ]; then
                 ls -1 "$DB_DIR"
