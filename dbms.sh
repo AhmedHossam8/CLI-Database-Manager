@@ -25,4 +25,13 @@ while true; do
                 echo "Database '$dbname' created."
             fi
             read -p "Press Enter to continue."
+           ;;
+	 2)
+            echo "Available Databases:"
+            if [ "$(ls -A $DB_DIR)" ]; then
+                ls -1 "$DB_DIR"
+            else
+                echo "No databases found."
+            fi
+            read -p "Press Enter to continue..."
             ;;
