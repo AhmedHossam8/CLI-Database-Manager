@@ -2,8 +2,6 @@
 
 DB_DIR="./databases"
 
-mkdir -p "$DB_DIR"
-
 while true; do
     clear
     echo "=========================="
