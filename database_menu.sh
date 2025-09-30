@@ -40,3 +40,19 @@ while true; do
             fi
             read -p "Press Enter to continue..."
             ;;
+         3)  # Drop Table
+            read -p "Enter table name to drop: " tname
+            if [ -f "$DB_PATH/$tname" ]; then
+                read -p "Are you sure you want to delete table '$tname'? Type 'yes' to confirm: " confirm
+                if [ "$confirm" == "yes" ]; then
+                    rm "$DB_PATH/$tname"
+                    echo "Table '$tname' deleted."
+                else
+                    echo "Delete operation canceled."
+                fi
+            else
+                echo "Table '$tname' does not exist."
+            fi
+            read -p "Press Enter to continue..."
+            ;;
+
