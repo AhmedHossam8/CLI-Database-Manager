@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DB_DIR="./databases"
+mkdir -p "$DB_DIR"
 
 while true; do
     clear
@@ -18,18 +19,18 @@ while true; do
     case $choice in
         1)
             read -p "Enter database name: " dbname
-            if [ -d "$databases/$dbname" ]; then
+            if [ -d "$DB_DIR/$dbname" ]; then
                 echo "Database '$dbname' already exists!"
             else
-                mkdir "$databases/$dbname"
+                mkdir "$DB_DIR/$dbname"
                 echo "Database '$dbname' created."
             fi
             read -p "Press Enter to continue."
             ;;
         2)
             echo "Available Databases:"
-            if [ "$(ls -A $databases)" ]; then
-                ls -1 "$databases"
+            if [ "$(ls -A $DB_DIR)" ]; then
+                ls -1 "$DB_DIR"
             else
                 echo "No databases found."
             fi
@@ -37,9 +38,9 @@ while true; do
             ;;
         3)
             read -p "Enter database name to connect: " dbname
-            if [ -d "$databases/$dbname" ]; then
+            if [ -d "$DB_DIR/$dbname" ]; then
                 echo "Connecting to database '$dbname'..."
-                ./database_menu.sh "$databases/$dbname"
+                ./database_menu.sh "$DB_DIR/$dbname"
             else
                 echo "Database '$dbname' does not exist."
                 read -p "Press Enter to continue..."
@@ -47,10 +48,10 @@ while true; do
             ;;
         4)
             read -p "Enter database name to drop: " dbname
-            if [ -d "$databases/$dbname" ]; then
+            if [ -d "$DB_DIR/$dbname" ]; then
                 read -p "Are you sure you want to delete '$dbname'? Type 'yes' to confirm: " confirm
                 if [ "$confirm" == "yes" ]; then
-                    rm -r "$databases/$dbname"
+                    rm -r "$DB_DIR/$dbname"
                     echo "Database '$dbname' deleted."
                 else
                     echo "Canceled."
