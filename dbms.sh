@@ -11,83 +11,50 @@ fi
 
 while true; do
     clear
-    echo "=========================="
-    echo "     Database Manager"
-    echo "=========================="
-    echo "1) Create Database"
-    echo "2) List Databases"
-    echo "3) Connect To Database"
-    echo "4) Drop Database"
-    echo "5) Exit"
-    echo "=========================="
-    read -p "Enter your choice: " choice
+    choice=$(zenity --list --title="Database Manager" --column="Option" \
+    "Create Database" "List Databases" "Connect To Database" "Drop Database" "Exit")
     
     case $choice in
-        1)
-            read -p "Enter database name: " dbname
-            if [ -d "$DB_DIR/$dbname" ]; then
-                echo "Database '$dbname' already exists!"
+        "Create Database")
+            dbname=$(zenity --entry --title="Create Database" --text="Enter database name:")
+            if [ -z "$dbname" ]; then
+                zenity --error --text="No name entered!"
+            elif [ -d "$DB_DIR/$dbname" ]; then
+                zenity --error --text="Database '$dbname' already exists!"
             else
                 mkdir "$DB_DIR/$dbname"
-                echo "Database '$dbname' created."
+                zenity --info --text="Database '$dbname' created successfully."
             fi
-            read -p "Press Enter to continue..."
             ;;
-        2)
+        "List Databases")
             echo "Available Databases:"
             if [ -d "$DB_DIR" ] && [ "$(ls -A $DB_DIR 2>/dev/null)" ]; then
-                ls -1 "$DB_DIR"
+                ls -1 "$DB_DIR" | zenity --text-info --title="Available Databases" --width=300 --height=200
             else
-                echo "No databases found."
+                zenity --warning --text="No databases found."
             fi
-            read -p "Press Enter to continue..."
             ;;
-        3)
-            read -p "Enter database name to connect: " dbname
+        "Connect To Database")
+            dbname=$(zenity --entry --title="Connect to Database" --text="Enter database name:")
             if [ -d "$DB_DIR/$dbname" ]; then
-                echo "Connecting to database '$dbname'..."
-                echo "Debug: Checking for database_menu.sh..."
-                
-                # Check if database_menu.sh exists in current directory
-                if [ -f "./database_menu.sh" ]; then
-                    echo "Debug: Found database_menu.sh"
-                    # Make it executable if it's not
-                    chmod +x ./database_menu.sh
-                    echo "Debug: Running: ./database_menu.sh $DB_DIR/$dbname"
-                    ./database_menu.sh "$DB_DIR/$dbname"
-                else
-                    echo "Error: database_menu.sh not found in current directory!"
-                    echo "Current directory: $(pwd)"
-                    echo "Files in current directory:"
-                    ls -la
-                fi
+                ./database_menu.sh "$DB_DIR/$dbname"
             else
-                echo "Database '$dbname' does not exist."
+                zenity --error --text="Database '$dbname' does not exist."
             fi
-            read -p "Press Enter to continue..."
             ;;
-        4)
-            read -p "Enter database name to drop: " dbname
+        "Drop Database")
+            dbname=$(zenity --entry --title="Drop Database" --text="Enter database name:")
             if [ -d "$DB_DIR/$dbname" ]; then
-                read -p "Are you sure you want to delete '$dbname'? Type 'yes' to confirm: " confirm
-                if [ "$confirm" = "yes" ]; then
+                if zenity --question --text="Are you sure you want to delete '$dbname'?"; then
                     rm -rf "$DB_DIR/$dbname"
-                    echo "Database '$dbname' deleted."
-                else
-                    echo "Canceled."
+                    zenity --info --text="Database '$dbname' deleted."
                 fi
             else
-                echo "Database '$dbname' does not exist."
+                zenity --error --text="Database '$dbname' does not exist."
             fi
-            read -p "Press Enter to continue..."
             ;;
-        5)
-            echo "Exiting..."
+        "Exit")
             exit 0
-            ;;
-        *)
-            echo "Invalid choice."
-            read -p "Press Enter to continue..."
             ;;
     esac
 done
