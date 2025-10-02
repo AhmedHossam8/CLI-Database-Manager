@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# Check if database path was provided
+
 if [ $# -eq 0 ]; then
-    echo "Error: No database path provided!"
-    echo "Usage: $0 <database_path>"
+    zenity --error --text="Error: No database path provided!\nUsage: $0 <database_path>"
     exit 1
 fi
 
@@ -11,137 +10,111 @@ DB_PATH=$1 # database directory passed from dbms.sh
 
 # Verify the database directory exists
 if [ ! -d "$DB_PATH" ]; then
-    echo "Error: Database directory '$DB_PATH' does not exist!"
+    zenity --error --text="Error: Database directory '$DB_PATH' does not exist!"
     exit 1
 fi
 
 while true; do
-    clear
-    echo "=========================="
-    echo " Database: $(basename "$DB_PATH")"
-    echo "=========================="
-    echo "1) Create Table"
-    echo "2) List Tables"
-    echo "3) Drop Table"
-    echo "4) Insert into Table"
-    echo "5) Select From Table"
-    echo "6) Delete From Table"
-    echo "7) Update Table"
-    echo "8) Back to Main Menu"
-    echo "=========================="
-    read -p "Enter your choice: " choice
+    choice=$(zenity --list --title="Database: $(basename "$DB_PATH")" \
+        --column="Option" \
+        "Create Table" \
+        "List Tables" \
+        "Drop Table" \
+        "Insert into Table" \
+        "Select From Table" \
+        "Delete From Table" \
+        "Update Table" \
+        "Back to Main Menu" \
+        --height=350 --width=400)
     
     case $choice in
-        1) # Create Table
-            read -p "Enter table name: " tname
-            if [ -f "$DB_PATH/$tname" ]; then
-                echo "Table '$tname' already exists!"
+        "Create Table")
+            tname=$(zenity --entry --title="Create Table" --text="Enter table name:")
+            if [ -z "$tname" ]; then
+                zenity --error --text="No table name entered!"
+            elif [ -f "$DB_PATH/$tname" ]; then
+                zenity --error --text="Table '$tname' already exists!"
             else
-                read -p "Enter columns (e.g. id:int,name:string,age:int): " schema
+                schema=$(zenity --entry --title="Table Schema" --text="Enter columns (e.g. id,name,age):")
                 echo "$schema" > "$DB_PATH/$tname"
-                echo "Table '$tname' created with schema: $schema"
+                zenity --info --text="Table '$tname' created with schema: $schema"
             fi
-            read -p "Press Enter to continue..."
             ;;
-        2) # List Tables
-            echo "Tables in $(basename "$DB_PATH"):"
+        "List Tables")
             if [ "$(ls -A "$DB_PATH" 2>/dev/null)" ]; then
-                ls -1 "$DB_PATH"
+                ls -1 "$DB_PATH" | zenity --text-info --title="Tables in $(basename "$DB_PATH")" --width=300 --height=200
             else
-                echo "No tables found."
+                zenity --warning --text="No tables found."
             fi
-            read -p "Press Enter to continue..."
             ;;
-        3) # Drop Table
-            read -p "Enter table name to drop: " tname
+        "Drop Table")
+            tname=$(zenity --entry --title="Drop Table" --text="Enter table name:")
             if [ -f "$DB_PATH/$tname" ]; then
-                read -p "Are you sure you want to delete table '$tname'? Type 'yes' to confirm: " confirm
-                if [ "$confirm" = "yes" ]; then
+                if zenity --question --text="Are you sure you want to delete '$tname'?"; then
                     rm "$DB_PATH/$tname"
-                    echo "Table '$tname' deleted."
-                else
-                    echo "Delete operation canceled."
+                    zenity --info --text="Table '$tname' deleted."
                 fi
             else
-                echo "Table '$tname' does not exist."
+                zenity --error --text="Table '$tname' does not exist."
             fi
-            read -p "Press Enter to continue..."
             ;;
-        4) # Insert into Table
-            read -p "Enter table name: " tname
+        "Insert into Table")
+            tname=$(zenity --entry --title="Insert into Table" --text="Enter table name:")
             if [ -f "$DB_PATH/$tname" ]; then
                 schema=$(head -n 1 "$DB_PATH/$tname")
-                echo "Table schema: $schema"
-                read -p "Enter values (comma-separated): " values
+                values=$(zenity --entry --title="Insert into $tname" --text="Schema: $schema\nEnter values (comma-separated):")
                 echo "$values" >> "$DB_PATH/$tname"
-                echo "Data inserted successfully."
+                zenity --info --text="Data inserted successfully."
             else
-                echo "Table '$tname' does not exist."
+                zenity --error --text="Table '$tname' does not exist."
             fi
-            read -p "Press Enter to continue..."
             ;;
-        5) # Select From Table
-            read -p "Enter table name: " tname
+        "Select From Table")
+            tname=$(zenity --entry --title="Select From Table" --text="Enter table name:")
             if [ -f "$DB_PATH/$tname" ]; then
-                echo "Table: $tname"
-                echo "Schema: $(head -n 1 "$DB_PATH/$tname")"
-                echo "=========================="
-                echo "Data:"
-                tail -n +2 "$DB_PATH/$tname" | nl -s ") "
+                data=$(tail -n +2 "$DB_PATH/$tname" | nl -s ") ")
+                zenity --text-info --title="Table: $tname" --width=400 --height=300 \
+                    --filename=<(echo -e "Schema: $(head -n 1 "$DB_PATH/$tname")\n\n$data")
             else
-                echo "Table '$tname' does not exist."
+                zenity --error --text="Table '$tname' does not exist."
             fi
-            read -p "Press Enter to continue..."
             ;;
-        6) # Delete From Table
-            read -p "Enter table name: " tname
+        "Delete From Table")
+            tname=$(zenity --entry --title="Delete From Table" --text="Enter table name:")
             if [ -f "$DB_PATH/$tname" ]; then
-                echo "Table: $tname"
-                echo "Data:"
-                tail -n +2 "$DB_PATH/$tname" | nl -s ") "
-                read -p "Enter row number to delete: " rownum
+                data=$(tail -n +2 "$DB_PATH/$tname" | nl -s ") ")
+                rownum=$(zenity --entry --title="Delete From $tname" --text="Data:\n$data\n\nEnter row number to delete:")
                 if [ "$rownum" -gt 0 ] 2>/dev/null; then
-                    # Add 1 to rownum to account for header
                     actual_line=$((rownum + 1))
                     sed -i "${actual_line}d" "$DB_PATH/$tname"
-                    echo "Row deleted successfully."
+                    zenity --info --text="Row deleted successfully."
                 else
-                    echo "Invalid row number."
+                    zenity --error --text="Invalid row number."
                 fi
             else
-                echo "Table '$tname' does not exist."
+                zenity --error --text="Table '$tname' does not exist."
             fi
-            read -p "Press Enter to continue..."
             ;;
-        7) # Update Table
-            read -p "Enter table name: " tname
+        "Update Table")
+            tname=$(zenity --entry --title="Update Table" --text="Enter table name:")
             if [ -f "$DB_PATH/$tname" ]; then
-                echo "Table: $tname"
-                echo "Schema: $(head -n 1 "$DB_PATH/$tname")"
-                echo "Data:"
-                tail -n +2 "$DB_PATH/$tname" | nl -s ") "
-                read -p "Enter row number to update: " rownum
+                schema=$(head -n 1 "$DB_PATH/$tname")
+                data=$(tail -n +2 "$DB_PATH/$tname" | nl -s ") ")
+                rownum=$(zenity --entry --title="Update $tname" --text="Schema: $schema\n\nData:\n$data\n\nEnter row number to update:")
                 if [ "$rownum" -gt 0 ] 2>/dev/null; then
-                    read -p "Enter new values (comma-separated): " newvalues
-                    # Add 1 to rownum to account for header
+                    newvalues=$(zenity --entry --title="New Values" --text="Enter new values (comma-separated):")
                     actual_line=$((rownum + 1))
                     sed -i "${actual_line}s/.*/$newvalues/" "$DB_PATH/$tname"
-                    echo "Row updated successfully."
+                    zenity --info --text="Row updated successfully."
                 else
-                    echo "Invalid row number."
+                    zenity --error --text="Invalid row number."
                 fi
             else
-                echo "Table '$tname' does not exist."
+                zenity --error --text="Table '$tname' does not exist."
             fi
-            read -p "Press Enter to continue..."
             ;;
-        8) # Back to Main Menu
-            echo "Returning to main menu..."
+        "Back to Main Menu")
             exit 0
-            ;;
-        *)
-            echo "Invalid choice."
-            read -p "Press Enter to continue..."
             ;;
     esac
 done
